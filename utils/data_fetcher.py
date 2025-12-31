@@ -11,7 +11,8 @@ from typing import Optional
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
     """
-    Download monthly ticker data from Yahoo Finance with caching.
+    Download daily ticker data from Yahoo Finance and resample to monthly.
+    Uses daily data to get accurate month-end prices (last trading day).
     
     Parameters
     ----------
@@ -23,13 +24,13 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
     Returns
     -------
     pd.DataFrame or None
-        DataFrame with Date, OHLCV data, or None if error
+        DataFrame with Date, OHLCV data (monthly), or None if error
     """
     try:
+        # Download daily data instead of monthly for accuracy
         data = yf.download(
             ticker,
             start=start_date,
-            interval="1mo",
             auto_adjust=True,
             progress=False
         )
@@ -41,8 +42,20 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
         # Check if data is empty
         if len(data) == 0:
             return None
-            
-        return data.reset_index()
+        
+        # Resample to monthly - take last trading day of each month
+        monthly_data = data.resample('M').agg({
+            'Open': 'first',
+            'High': 'max',
+            'Low': 'min',
+            'Close': 'last',
+            'Volume': 'sum'
+        })
+        
+        # Reset index to get Date as column
+        monthly_data = monthly_data.reset_index()
+        
+        return monthly_data
     
     except Exception as e:
         st.error(f"Failed to download data for {ticker}: {e}")

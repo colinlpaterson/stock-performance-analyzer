@@ -220,9 +220,9 @@ if analyze_button:
             export_data = export_data.rename(columns={'Close': 'Adj Close'})
             export_data['YTD'] = export_data['YTD'] * 100  # Convert to percentage
             
-            # Convert dates to month-end for clarity
-            # yfinance returns start of month, but prices are actually month-end
-            export_data['Date'] = pd.to_datetime(export_data['Date']) + pd.offsets.MonthEnd(0)
+            # Date is already the last trading day of the month from resampling
+            # Format as date only (no time component)
+            export_data['Date'] = pd.to_datetime(export_data['Date']).dt.date
             
             csv = export_data.to_csv(index=False)
             st.download_button(
