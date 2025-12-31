@@ -1,0 +1,167 @@
+"""
+Data fetching utilities for stock performance analysis.
+"""
+import yfinance as yf
+import pandas as pd
+import streamlit as st
+from datetime import datetime
+from typing import Optional
+
+
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
+    """
+    Download monthly ticker data from Yahoo Finance with caching.
+    
+    Parameters
+    ----------
+    ticker : str
+        Stock ticker symbol
+    start_date : str
+        Start date in 'YYYY-MM-DD' format
+        
+    Returns
+    -------
+    pd.DataFrame or None
+        DataFrame with Date, OHLCV data, or None if error
+    """
+    try:
+        data = yf.download(
+            ticker,
+            start=start_date,
+            interval="1mo",
+            auto_adjust=True,
+            progress=False
+        )
+        
+        # Handle potential MultiIndex columns from yfinance
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.droplevel(1)
+        
+        # Check if data is empty
+        if len(data) == 0:
+            return None
+            
+        return data.reset_index()
+    
+    except Exception as e:
+        st.error(f"Failed to download data for {ticker}: {e}")
+        return None
+
+
+def validate_ticker(ticker: str) -> bool:
+    """
+    Validate if a ticker symbol exists and has data.
+    
+    Parameters
+    ----------
+    ticker : str
+        Stock ticker symbol
+        
+    Returns
+    -------
+    bool
+        True if ticker is valid, False otherwise
+    """
+    if not ticker or len(ticker.strip()) == 0:
+        return False
+    
+    try:
+        # Try to fetch minimal data to validate
+        test_data = yf.Ticker(ticker).info
+        return 'symbol' in test_data or 'shortName' in test_data
+    except:
+        return False
+
+
+def get_ticker_info(ticker: str) -> dict:
+    """
+    Get basic information about a ticker.
+    
+    Parameters
+    ----------
+    ticker : str
+        Stock ticker symbol
+        
+    Returns
+    -------
+    dict
+        Dictionary with ticker information
+    """
+    try:
+        ticker_obj = yf.Ticker(ticker)
+        info = ticker_obj.info
+        return {
+            'name': info.get('shortName', ticker),
+            'type': info.get('quoteType', 'Unknown'),
+            'exchange': info.get('exchange', 'Unknown')
+        }
+    except:
+        return {
+            'name': ticker,
+            'type': 'Unknown',
+            'exchange': 'Unknown'
+        }
+
+
+# Common ticker definitions for dropdowns
+POPULAR_TICKERS = {
+    "Equity ETFs": {
+        "SPY": "SPDR S&P 500 ETF",
+        "QQQ": "Invesco QQQ (Nasdaq-100)",
+        "DIA": "SPDR Dow Jones Industrial Average ETF",
+        "IWM": "iShares Russell 2000 ETF",
+        "VTI": "Vanguard Total Stock Market ETF",
+        "VOO": "Vanguard S&P 500 ETF"
+    },
+    "Bond ETFs": {
+        "TLT": "iShares 20+ Year Treasury Bond ETF",
+        "AGG": "iShares Core U.S. Aggregate Bond ETF",
+        "BND": "Vanguard Total Bond Market ETF",
+        "LQD": "iShares iBoxx Investment Grade Corporate Bond ETF"
+    },
+    "Commodity ETFs": {
+        "GLD": "SPDR Gold Shares",
+        "SLV": "iShares Silver Trust",
+        "USO": "United States Oil Fund",
+        "DBA": "Invesco DB Agriculture Fund"
+    },
+    "Sector ETFs": {
+        "XLF": "Financial Select Sector SPDR Fund",
+        "XLE": "Energy Select Sector SPDR Fund",
+        "XLK": "Technology Select Sector SPDR Fund",
+        "XLV": "Health Care Select Sector SPDR Fund"
+    }
+}
+
+
+def get_all_popular_tickers() -> list:
+    """Get a flat list of all popular ticker symbols."""
+    tickers = []
+    for category in POPULAR_TICKERS.values():
+        tickers.extend(category.keys())
+    return sorted(tickers)
+
+
+def get_ticker_description(ticker: str) -> str:
+    """
+    Get description for a ticker symbol.
+    
+    Parameters
+    ----------
+    ticker : str
+        Stock ticker symbol
+        
+    Returns
+    -------
+    str
+        Description of the ticker
+    """
+    # Search through all categories
+    for category in POPULAR_TICKERS.values():
+        if ticker in category:
+            return category[ticker]
+    
+    # Fallback to fetching from yfinance
+    info = get_ticker_info(ticker)
+    return info.get('name', ticker)
