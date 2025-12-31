@@ -44,7 +44,7 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
             return None
         
         # Resample to monthly - take last trading day of each month
-        monthly_data = data.resample('M').agg({
+        monthly_data = data.resample('ME').agg({
             'Open': 'first',
             'High': 'max',
             'Low': 'min',

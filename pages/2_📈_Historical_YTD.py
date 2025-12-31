@@ -36,6 +36,8 @@ st.title("📈 Historical Year-to-Date Performance")
 st.markdown("""
 Analyze year-to-date (YTD) price returns for any stock or ETF across multiple years.
 Compare current year performance against historical trends to identify patterns and outliers.
+
+**Note:** All prices are adjusted close prices, which account for stock splits but not dividends.
 """)
 
 # Sidebar for inputs
@@ -88,10 +90,11 @@ with st.sidebar.expander("ℹ️ About YTD Calculation"):
     st.markdown("""
     **YTD Return Formula:**
     ```
-    YTD = (Current Month Close / Prior December Close) - 1
+    YTD = (Current Month Adj Close / Prior December Adj Close) - 1
     ```
     
     - Measures price return only (excludes dividends)
+    - Uses adjusted close prices (accounts for splits)
     - Each year starts from prior December close
     - Current year shows completed months only
     - Historical years shown in grey for comparison
@@ -205,11 +208,14 @@ if analyze_button:
                 
                 **Methodology:**
                 - YTD return measured from prior December month-end to each subsequent month-end
-                - Price return only - does not include dividend distributions
+                - Uses adjusted close prices (accounts for stock splits, not dividends)
+                - Price return only - does not include dividend distributions (total return)
                 - {summary_stats['highlight_year']} line ends at last completed month
                 - Average calculated across {summary_stats['n_years']} completed years
+                - Dates represent the last trading day of each month
                 
-                **Note:** This analysis uses adjusted close prices which account for stock splits but not dividends.
+                **Note:** Adjusted close prices account for stock splits but do NOT include reinvested dividends.
+                This analysis shows pure price appreciation/depreciation.
                 """)
             
             # Download data option
@@ -229,7 +235,8 @@ if analyze_button:
                 label="Download YTD Data (CSV)",
                 data=csv,
                 file_name=f"{ticker}_ytd_analysis_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
+                mime="text/csv",
+                help="Download data with adjusted close prices (last trading day of each month)"
             )
 
 else:
@@ -257,8 +264,15 @@ else:
     - **QQQ** - Nasdaq-100 ETF  
     - **GLD** - Gold ETF
     - **TLT** - 20+ Year Treasury Bond ETF
+    
+    ### About Adjusted Close Prices
+    
+    This analysis uses **adjusted close prices** which:
+    - ✅ Account for stock splits
+    - ❌ Do NOT include dividends
+    - Show pure price return (capital appreciation only)
     """)
 
 # Footer
 st.markdown("---")
-st.caption("Data provided by Yahoo Finance. For informational purposes only. Not financial advice.")
+st.caption("Data provided by Yahoo Finance. Adjusted close prices used (accounts for splits, not dividends). For informational purposes only. Not financial advice.")
