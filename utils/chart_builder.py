@@ -10,7 +10,7 @@ import pandas as pd
 MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-COLOR_CURRENT_YEAR = "#FFD700"  # Gold
+COLOR_CURRENT_YEAR = "#01528a"  # Blue
 COLOR_HISTORICAL = "#808080"  # Grey
 COLOR_BEST = "#228B22"  # Forest Green
 COLOR_WORST = "#DC143C"  # Crimson
