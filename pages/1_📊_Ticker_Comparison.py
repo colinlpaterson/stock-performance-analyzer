@@ -51,13 +51,27 @@ st.sidebar.header("Ticker Selection")
 # Determine comparison years for display
 current_year, prior_year, last_month, is_january = determine_comparison_years()
 
+# Determine the actual years to compare
+if is_january:
+    compare_year = prior_year          # 2025
+    baseline_year = prior_year - 1     # 2024
+else:
+    compare_year = current_year        # 2026 (during year), compare YTD
+    baseline_year = prior_year         # 2025
+
+
 # Show what will be compared
 if is_january:
-    st.sidebar.info(f"📅 **Comparing:**\n\nFull Year {prior_year}\n\nvs\n\nFull Year {prior_year - 1}")
+    st.sidebar.info(
+        f"📅 **Comparing:**\n\nFull Year {compare_year}\n\nvs\n\nFull Year {baseline_year}"
+    )
 else:
-    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    st.sidebar.info(f"📅 **Comparing:**\n\nYTD {current_year} (through {month_names[last_month-1]})\n\nvs\n\nYTD {prior_year} (through {month_names[last_month-1]})")
+    st.sidebar.info(
+        f"📅 **Comparing:**\n\nYTD {compare_year} (through {month_names[last_month-1]})"
+        f"\n\nvs\n\nYTD {baseline_year} (through {month_names[last_month-1]})"
+    )
 
 # Display current ticker list
 st.sidebar.subheader("Selected Tickers")
@@ -173,22 +187,23 @@ if analyze_button:
             failed_tickers = []
             
             for ticker in st.session_state.ticker_list:
-                # We need data from 2 years before prior year to calculate YTD
-                start_year = prior_year - 2
+                # We need baseline_year-1 data so baseline_year can use prior Dec close
+                start_year = baseline_year - 1
                 data = load_ticker_data(ticker, f"{start_year}-01-01")
-                
+
                 if data is None or len(data) == 0:
                     failed_tickers.append(ticker)
                     continue
-                
-                # Calculate YTD returns
-                ytd_data = calculate_ytd_returns(data, start_year, current_year)
-                
+
+                # Calculate YTD returns up through compare_year
+                ytd_data = calculate_ytd_returns(data, start_year, compare_year)
+
                 if len(ytd_data) == 0:
                     failed_tickers.append(ticker)
                     continue
-                
+
                 all_ytd_data[ticker] = ytd_data
+
             
             # Show warnings for failed tickers
             if failed_tickers:
@@ -200,9 +215,9 @@ if analyze_button:
             
             # Prepare comparison data
             comparison_data = prepare_comparison_data(
-                all_ytd_data,
-                current_year,
-                prior_year,
+                 all_ytd_data,
+                compare_year,
+                baseline_year,
                 last_month
             )
             
@@ -216,8 +231,8 @@ if analyze_button:
             # Create and display chart
             fig = create_multi_ticker_comparison_chart(
                 comparison_data,
-                current_year,
-                prior_year,
+                compare_year,
+                baseline_year,
                 last_month,
                 is_january
             )
@@ -229,16 +244,16 @@ if analyze_button:
             
             stats_df = calculate_comparison_statistics(
                 comparison_data,
-                current_year,
-                prior_year,
+                compare_year,
+                baseline_year,
                 last_month,
                 is_january
             )
             
             display_df = format_comparison_table(
                 stats_df,
-                current_year,
-                prior_year,
+                compare_year,
+                baseline_year,
                 last_month,
                 is_january
             )
@@ -250,35 +265,40 @@ if analyze_button:
                 use_container_width=True,
                 height=min(400, (len(display_df) + 1) * 35 + 3)
             )
-            
+            #Helper
+            def safe_idx(op_series, fn):
+                s = op_series.dropna()
+                if s.empty:
+                    return None
+                return fn(s)
             # Key insights
             with st.expander("🔍 Key Insights"):
                 # Best performer
-                best_idx = stats_df['Current Return'].idxmax()
-                if not pd.isna(stats_df.loc[best_idx, 'Current Return']):
-                    best_ticker = stats_df.loc[best_idx, 'Ticker']
-                    best_return = stats_df.loc[best_idx, 'Current Return'] * 100
+                best_idx = safe_idx(stats_df["Current Return"], lambda s: s.idxmax())
+                if best_idx is not None:
+                    best_ticker = stats_df.loc[best_idx, "Ticker"]
+                    best_return = stats_df.loc[best_idx, "Current Return"] * 100
                     st.markdown(f"**🏆 Best Performer:** {best_ticker} ({best_return:+.1f}%)")
-                
+
                 # Worst performer
-                worst_idx = stats_df['Current Return'].idxmin()
-                if not pd.isna(stats_df.loc[worst_idx, 'Current Return']):
-                    worst_ticker = stats_df.loc[worst_idx, 'Ticker']
-                    worst_return = stats_df.loc[worst_idx, 'Current Return'] * 100
+                worst_idx = safe_idx(stats_df["Current Return"], lambda s: s.idxmin())
+                if worst_idx is not None:
+                    worst_ticker = stats_df.loc[worst_idx, "Ticker"]
+                    worst_return = stats_df.loc[worst_idx, "Current Return"] * 100
                     st.markdown(f"**📉 Worst Performer:** {worst_ticker} ({worst_return:+.1f}%)")
-                
+
                 # Biggest improvement
-                biggest_gain_idx = stats_df['Difference'].idxmax()
-                if not pd.isna(stats_df.loc[biggest_gain_idx, 'Difference']):
-                    gain_ticker = stats_df.loc[biggest_gain_idx, 'Ticker']
-                    gain_diff = stats_df.loc[biggest_gain_idx, 'Difference'] * 100
+                biggest_gain_idx = safe_idx(stats_df["Difference"], lambda s: s.idxmax())
+                if biggest_gain_idx is not None:
+                    gain_ticker = stats_df.loc[biggest_gain_idx, "Ticker"]
+                    gain_diff = stats_df.loc[biggest_gain_idx, "Difference"] * 100
                     st.markdown(f"**📈 Most Improved:** {gain_ticker} ({gain_diff:+.1f}% vs prior period)")
-                
+
                 # Biggest decline
-                biggest_decline_idx = stats_df['Difference'].idxmin()
-                if not pd.isna(stats_df.loc[biggest_decline_idx, 'Difference']):
-                    decline_ticker = stats_df.loc[biggest_decline_idx, 'Ticker']
-                    decline_diff = stats_df.loc[biggest_decline_idx, 'Difference'] * 100
+                biggest_decline_idx = safe_idx(stats_df["Difference"], lambda s: s.idxmin())
+                if biggest_decline_idx is not None:
+                    decline_ticker = stats_df.loc[biggest_decline_idx, "Ticker"]
+                    decline_diff = stats_df.loc[biggest_decline_idx, "Difference"] * 100
                     st.markdown(f"**📉 Biggest Decline:** {decline_ticker} ({decline_diff:+.1f}% vs prior period)")
             
             # Export data
@@ -294,14 +314,14 @@ if analyze_button:
                     row = {'Ticker': ticker, 'Month': month}
                     
                     if current_series is not None and month in current_series.index:
-                        row[f'{current_year}_YTD'] = current_series.loc[month]
+                        row[f'{compare_year}_YTD'] = current_series.loc[month]
                     else:
-                        row[f'{current_year}_YTD'] = None
+                        row[f'{baseline_year}_YTD'] = None
                     
                     if prior_series is not None and month in prior_series.index:
-                        row[f'{prior_year}_YTD'] = prior_series.loc[month]
+                        row[f'{baseline_year}_YTD'] = prior_series.loc[month]
                     else:
-                        row[f'{prior_year}_YTD'] = None
+                        row[f'{baseline_year}_YTD'] = None
                     
                     export_rows.append(row)
             

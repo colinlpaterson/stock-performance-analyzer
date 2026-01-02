@@ -125,23 +125,34 @@ def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
             font=dict(size=18, color='#2c3e50')
         ),
         xaxis=dict(
-            title="Month",
+            title=dict(
+                text="Month",
+                font=dict(color="#111111", size=12)
+            ),
             tickmode='array',
             tickvals=months,
             ticktext=MONTH_LABELS,
+            tickfont=dict(color="#111111"),
             range=[0.5, 13.5],
             showgrid=True,
-            gridcolor='rgba(128,128,128,0.2)'
+            gridcolor='rgba(128,128,128,0.2)',
+            linecolor="#111111",
+            zerolinecolor="#111111"
         ),
         yaxis=dict(
-            title="Year-to-Date Price Return (%)",
-            tickformat='.0f',
+            title=dict(
+                text="Year-to-Date Price Return (%)",
+                font=dict(color="#111111", size=12)
+            ),
+            tickformat='.1f',
             ticksuffix='%',
+            tickfont=dict(color="#111111"),
             showgrid=True,
             gridcolor='rgba(128,128,128,0.2)',
             zeroline=True,
             zerolinewidth=2,
-            zerolinecolor='rgba(0,0,0,0.3)'
+            zerolinecolor='rgba(0,0,0,0.4)',
+            linecolor="#111111"
         ),
         hovermode='closest',
         plot_bgcolor='white',
@@ -162,8 +173,8 @@ def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
 
 def create_multi_ticker_comparison_chart(
     ticker_data: Dict[str, Dict[str, pd.Series]],
-    current_year: int,
-    prior_year: int,
+    compare_year: int,
+    baseline_year: int,
     last_month_current: int,
     is_january: bool
 ) -> go.Figure:
@@ -174,9 +185,9 @@ def create_multi_ticker_comparison_chart(
     ----------
     ticker_data : dict
         Nested dict: {ticker: {'current': series, 'prior': series}}
-    current_year : int
+    compare_year : int
         Current/most recent year being displayed
-    prior_year : int
+    baseline_year : int
         Prior year for comparison
     last_month_current : int
         Last completed month in current period
@@ -212,10 +223,10 @@ def create_multi_ticker_comparison_chart(
                 x=months,
                 y=prior_series.reindex(months) * 100,
                 mode='lines',
-                name=f"{ticker} {prior_year}",
+                name=f"{ticker} {baseline_year}",
                 line=dict(color=color, width=prior_width, dash=prior_line_style),
                 opacity=prior_alpha,
-                hovertemplate=f'<b>{ticker} {prior_year}</b><br>Month: %{{x}}<br>Return: %{{y:.1f}}%<extra></extra>'
+                hovertemplate=f'<b>{ticker} {baseline_year}</b><br>Month: %{{x}}<br>Return: %{{y:.1f}}%<extra></extra>'
             ))
         
         # Plot current year
@@ -229,10 +240,10 @@ def create_multi_ticker_comparison_chart(
                 x=months,
                 y=display_series * 100,
                 mode='lines+markers',
-                name=f"{ticker} {current_year}",
+                name=f"{ticker} {compare_year}",
                 line=dict(color=color, width=2.5),
                 marker=dict(size=6, color=color),
-                hovertemplate=f'<b>{ticker} {current_year}</b><br>Month: %{{x}}<br>Return: %{{y:.1f}}%<extra></extra>'
+                hovertemplate=f'<b>{ticker} {compare_year}</b><br>Month: %{{x}}<br>Return: %{{y:.1f}}%<extra></extra>'
             ))
             
             # Add endpoint annotation
@@ -259,10 +270,10 @@ def create_multi_ticker_comparison_chart(
     
     # Build title based on comparison type
     if is_january:
-        title_text = f"Year-to-Date Price Return Comparison<br><sub>Full Year {prior_year} vs Full Year {prior_year-1}</sub>"
+        title_text = f"Price Return Comparison<br><sub>Full Year {compare_year} vs Full Year {baseline_year}</sub>"
     else:
-        title_text = f"Year-to-Date Price Return Comparison<br><sub>{current_year} YTD vs {prior_year} YTD (through {MONTH_LABELS[last_month_current-1]})</sub>"
-    
+        title_text = f"Year-to-Date Price Return Comparison<br><sub>{compare_year} YTD vs {baseline_year} YTD (through {MONTH_LABELS[last_month_current-1]})</sub>"
+
     fig.update_layout(
         title=dict(
             text=title_text,
@@ -270,24 +281,35 @@ def create_multi_ticker_comparison_chart(
             xanchor='center',
             font=dict(size=18, color='#2c3e50')
         ),
-        xaxis=dict(
-            title="Month",
+       xaxis=dict(
+            title=dict(
+                text="Month",
+                font=dict(color="#111111", size=12)
+            ),
             tickmode='array',
             tickvals=months,
             ticktext=MONTH_LABELS,
+            tickfont=dict(color="#111111"),
             range=[0.5, 13.5],
             showgrid=True,
-            gridcolor='rgba(128,128,128,0.2)'
+            gridcolor='rgba(128,128,128,0.2)',
+            linecolor="#111111",
+            zerolinecolor="#111111"
         ),
-        yaxis=dict(
-            title="Year-to-Date Price Return (%)",
+       yaxis=dict(
+            title=dict(
+                text="Year-to-Date Price Return (%)",
+                font=dict(color="#111111", size=12)
+            ),
             tickformat='.1f',
             ticksuffix='%',
+            tickfont=dict(color="#111111"),
             showgrid=True,
             gridcolor='rgba(128,128,128,0.2)',
             zeroline=True,
             zerolinewidth=2,
-            zerolinecolor='rgba(0,0,0,0.3)'
+            zerolinecolor='rgba(0,0,0,0.4)',
+            linecolor="#111111"
         ),
         hovermode='x unified',
         plot_bgcolor='white',

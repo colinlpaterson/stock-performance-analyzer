@@ -9,28 +9,24 @@ from typing import Dict, Tuple, Optional
 
 def determine_comparison_years() -> Tuple[int, int, int, bool]:
     """
-    Determine which years to compare based on current date.
-    
-    Logic:
+    Returns (current_year, prior_year, last_completed_month, is_january)
+
     - January: Compare full prior year vs year before that
-    - Other months: Compare YTD current year vs YTD prior year (same months)
-    
-    Returns
-    -------
-    tuple
-        (current_year, prior_year, last_completed_month, is_january)
+    - Other months: Compare YTD current year vs YTD prior year through last completed month
     """
     today = datetime.now()
     current_year = today.year
     current_month = today.month
-    
-    # January special case: no completed months yet
+
+    # January: last completed year is prior calendar year
     if current_month == 1:
-        return current_year - 1, current_year - 2, 12, True
-    
-    # Other months: compare YTD periods
+        prior_year = current_year - 1
+        return current_year, prior_year, 12, True
+
+    # Other months: compare YTD through last completed month
     last_completed_month = current_month - 1
-    return current_year, current_year - 1, last_completed_month, False
+    prior_year = current_year - 1
+    return current_year, prior_year, last_completed_month, False
 
 
 def get_ytd_for_comparison(
