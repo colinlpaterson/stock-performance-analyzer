@@ -253,7 +253,7 @@ else:
     ### What You'll See
     
     - **Interactive chart** showing YTD performance across all years
-    - **Current year** highlighted in gold
+    - **Current year** highlighted
     - **Best and worst years** marked with green and red dots
     - **Summary statistics** including averages and volatility
     - **Export options** to download the underlying data
