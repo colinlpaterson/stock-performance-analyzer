@@ -108,8 +108,8 @@ def prepare_comparison_data(
 
 def calculate_comparison_statistics(
     comparison_data: Dict[str, Dict[str, pd.Series]],
-    current_year: int,
-    prior_year: int,
+    compare_year: int,
+    baseline_year: int,
     last_month: int,
     is_january: bool
 ) -> pd.DataFrame:
@@ -120,9 +120,9 @@ def calculate_comparison_statistics(
     ----------
     comparison_data : dict
         Nested dict with current and prior series for each ticker
-    current_year : int
+    compare_year : int
         Current/display year
-    prior_year : int
+    baseline_year : int
         Prior year
     last_month : int
         Last month included
@@ -167,8 +167,8 @@ def calculate_comparison_statistics(
 
 def format_comparison_table(
     stats_df: pd.DataFrame,
-    current_year: int,
-    prior_year: int,
+    compare_year: int,
+    baseline_year: int,
     last_month: int,
     is_january: bool
 ) -> pd.DataFrame:
@@ -179,9 +179,9 @@ def format_comparison_table(
     ----------
     stats_df : pd.DataFrame
         Raw statistics DataFrame
-    current_year : int
+    compare_year : int
         Current year
-    prior_year : int
+    baseline_year : int
         Prior year
     last_month : int
         Last month
@@ -197,14 +197,14 @@ def format_comparison_table(
     
     # Determine period description
     if is_january:
-        current_period = f"Full {prior_year}"
-        prior_period = f"Full {prior_year - 1}"
+        current_period = f"Full {compare_year}"
+        prior_period = f"Full {baseline_year}"
     else:
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         month_str = month_names[last_month - 1]
-        current_period = f"YTD {current_year}\n(through {month_str})"
-        prior_period = f"YTD {prior_year}\n(through {month_str})"
+        current_period = f"YTD {compare_year}\n(through {month_str})"
+        prior_period = f"YTD {baseline_year}\n(through {month_str})"
     
     # Format the dataframe
     display_df = pd.DataFrame({

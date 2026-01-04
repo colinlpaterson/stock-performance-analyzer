@@ -1,11 +1,11 @@
 """
 Chart building utilities using Plotly for interactive visualizations.
 """
+import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 from typing import Dict
 import pandas as pd
-
 
 MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -15,6 +15,14 @@ COLOR_HISTORICAL = "#808080"  # Grey
 COLOR_BEST = "#228B22"  # Forest Green
 COLOR_WORST = "#DC143C"  # Crimson
 
+theme_base = st.get_option("theme.base") or "light"
+is_dark = theme_base == "dark"
+
+TEXT_COLOR = "#f0f0f0" if is_dark else "#111111"
+LEGEND_BG  = "rgba(0,0,0,0.35)" if is_dark else "rgba(255,255,255,0.9)"
+GRID_COLOR = "rgba(255,255,255,0.18)" if is_dark else "rgba(128,128,128,0.2)"
+PLOT_BG  = "rgba(0,0,0,0)" if is_dark else "white"
+PAPER_BG = "rgba(0,0,0,0)" if is_dark else "white"
 
 def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
                             highlight_year: int,
@@ -122,49 +130,50 @@ def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
             text=f"{ticker} Year-to-Date Price Return by Calendar Year ({summary_stats['actual_start_year']}–{summary_stats['highlight_year']})",
             x=0.5,
             xanchor='center',
-            font=dict(size=18, color='#2c3e50')
+            font=dict(size=18, color=TEXT_COLOR)
         ),
         xaxis=dict(
             title=dict(
                 text="Month",
-                font=dict(color="#111111", size=12)
+                font=dict(color=TEXT_COLOR, size=12)
             ),
             tickmode='array',
             tickvals=months,
             ticktext=MONTH_LABELS,
-            tickfont=dict(color="#111111"),
+            tickfont=dict(color=TEXT_COLOR),
             range=[0.5, 13.5],
             showgrid=True,
-            gridcolor='rgba(128,128,128,0.2)',
-            linecolor="#111111",
-            zerolinecolor="#111111"
+            gridcolor=GRID_COLOR,
+            linecolor=TEXT_COLOR,
+            zerolinecolor=TEXT_COLOR
         ),
         yaxis=dict(
             title=dict(
                 text="Year-to-Date Price Return (%)",
-                font=dict(color="#111111", size=12)
+                font=dict(color=TEXT_COLOR, size=12)
             ),
             tickformat='.1f',
             ticksuffix='%',
-            tickfont=dict(color="#111111"),
+            tickfont=dict(color=TEXT_COLOR),
             showgrid=True,
-            gridcolor='rgba(128,128,128,0.2)',
+            gridcolor=GRID_COLOR,
             zeroline=True,
             zerolinewidth=2,
-            zerolinecolor='rgba(0,0,0,0.4)',
-            linecolor="#111111"
+            zerolinecolor=TEXT_COLOR,
+            linecolor=TEXT_COLOR
         ),
         hovermode='closest',
-        plot_bgcolor='white',
-        paper_bgcolor='white',
+        plot_bgcolor=PLOT_BG,
+        paper_bgcolor=PAPER_BG,
         height=600,
         margin=dict(l=80, r=80, t=100, b=100),
         legend=dict(
             x=0.02,
             y=0.98,
-            bgcolor='rgba(255,255,255,0.8)',
-            bordercolor='rgba(0,0,0,0.2)',
-            borderwidth=1
+            bgcolor=LEGEND_BG,
+            bordercolor="rgba(255,255,255,0.25)" if is_dark else "rgba(0,0,0,0.2)",
+            borderwidth=1,
+            font=dict(color=TEXT_COLOR)
         )
     )
     
@@ -279,41 +288,41 @@ def create_multi_ticker_comparison_chart(
             text=title_text,
             x=0.5,
             xanchor='center',
-            font=dict(size=18, color='#2c3e50')
+            font=dict(size=18, color=TEXT_COLOR)
         ),
        xaxis=dict(
             title=dict(
                 text="Month",
-                font=dict(color="#111111", size=12)
+                font=dict(color=TEXT_COLOR, size=12)
             ),
             tickmode='array',
             tickvals=months,
             ticktext=MONTH_LABELS,
-            tickfont=dict(color="#111111"),
+            tickfont=dict(color=TEXT_COLOR),
             range=[0.5, 13.5],
             showgrid=True,
-            gridcolor='rgba(128,128,128,0.2)',
-            linecolor="#111111",
-            zerolinecolor="#111111"
+            gridcolor=GRID_COLOR,
+            linecolor=TEXT_COLOR,
+            zerolinecolor=TEXT_COLOR
         ),
        yaxis=dict(
             title=dict(
                 text="Year-to-Date Price Return (%)",
-                font=dict(color="#111111", size=12)
+                font=dict(color=TEXT_COLOR, size=12)
             ),
             tickformat='.1f',
             ticksuffix='%',
-            tickfont=dict(color="#111111"),
+            tickfont=dict(color=TEXT_COLOR),
             showgrid=True,
-            gridcolor='rgba(128,128,128,0.2)',
+            gridcolor=GRID_COLOR,
             zeroline=True,
             zerolinewidth=2,
-            zerolinecolor='rgba(0,0,0,0.4)',
-            linecolor="#111111"
+            zerolinecolor=TEXT_COLOR,
+            linecolor=TEXT_COLOR
         ),
         hovermode='x unified',
-        plot_bgcolor='white',
-        paper_bgcolor='white',
+        plot_bgcolor=PLOT_BG,
+        paper_bgcolor=PAPER_BG,
         height=600,
         margin=dict(l=80, r=80, t=120, b=80),
         legend=dict(
@@ -323,8 +332,9 @@ def create_multi_ticker_comparison_chart(
             xanchor='left',
             x=0.02,
             bgcolor='rgba(255,255,255,0.9)',
-            bordercolor='rgba(0,0,0,0.2)',
-            borderwidth=1
+            bordercolor="rgba(255,255,255,0.25)" if is_dark else "rgba(0,0,0,0.2)",
+            borderwidth=1,
+            font=dict(color=TEXT_COLOR)
         ),
         showlegend=True
     )
