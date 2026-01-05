@@ -65,6 +65,7 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
 def validate_ticker(ticker: str) -> bool:
     """
     Validate if a ticker symbol exists and has data.
+    Uses a simple data download test instead of .info API call.
     
     Parameters
     ----------
@@ -80,9 +81,16 @@ def validate_ticker(ticker: str) -> bool:
         return False
     
     try:
-        # Try to fetch minimal data to validate
-        test_data = yf.Ticker(ticker).info
-        return 'symbol' in test_data or 'shortName' in test_data
+        # Simple validation: try to download 5 days of recent data
+        # This is more reliable than using .info which often times out
+        test_data = yf.download(ticker, period="5d", progress=False)
+        
+        # Handle MultiIndex if present
+        if isinstance(test_data.columns, pd.MultiIndex):
+            test_data.columns = test_data.columns.droplevel(1)
+        
+        # Check if we got any data back
+        return len(test_data) > 0
     except:
         return False
 
